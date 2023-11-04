@@ -263,8 +263,8 @@ ASCII_NEWLINE_2 .fill 10
 .orig x5000
 ;; YOUR CODE HERE!
 REVERSE
-    ADD R6, R6, -1 ; save R0 in stack
-    STR R0, R6, 0 
+    ADD R6, R6, -1 ; set stack pointer to -1
+    STR R0, R6, 0  ; push starting address (R0) onto stack
     ADD R6, R6, -1
     STR R1, R6, 0
     ADD R6, R6, -1
@@ -280,11 +280,13 @@ REVERSE
     AND R1, R1, 0
 LOOOP   LDR R2, R0, 0 ; load the current character
         BRz ENDY ; if it's null terminator
+        
         LD R3, ASCII_NEWLINE_3 ; check if it's a new line
         NOT R3, R3
         ADD R3, R3, 1 ; -(newline)
         ADD R3, R3, R2 ; check if char == \n
         BRz ENDY ; if so, go to while loop
+        
         LD R3, ASCII_SPACE_2
         NOT R3, R3
         ADD R3, R3, 1 ; -(space)
@@ -293,10 +295,12 @@ LOOOP   LDR R2, R0, 0 ; load the current character
         BRz SKIPP ; if so, i++ and continue
             SKIPP ADD R0, R0, 1 ; i++
             BR LOOOP ; continue
+            
 INIT    ADD R0, R0, 0 ; current address
         AND R5, R5, 0 
         ADD R5, R5, R0 ; start = i
         AND R4, R4, 0 ; count = 0
+        
 WHILE LD R3, ASCII_SPACE_2 
         ADD R2, R2, 0 ; make sure currChar isn't \0
         BRz ENDWHILE_2 ; if null, then go to i = start
@@ -377,7 +381,37 @@ ASCII_SPACE_2   .fill 32
 
 .orig x5800
 ;; YOUR CODE HERE!
-RET
+ADD R0, R0, 0 ; start = R0
+AND R1, R1, 0 
+ADD R1, R1, R0 ; currAddress = start = R0
+WHILE_4 LDR R2, R1, 0 ; R2 = mem[currAddress] 
+    BRz END_WHILE_4 ; if null, exit while
+    LD R3, ASCII_NEWLINE_4 ; R3 = \n 
+    NOT R3, R3
+    ADD R3, R3, 1 ; -(\n)
+    ADD R4, R3, R2 ; R4 = -(\n) + currChar
+    BRz END_WHILE4
+    ADD R1, R1, 1 ; currAddress++
+
+END_WHILE4 ADD R1, R1, -1 ; currAddress--
+AND R5, R5, 0
+ADD R5, R5, R1 ; R5 = end = curr
+; shift over entire string one spacebar at a time
+; until no longer terminated by a spacebar
+    LDR R2, R5, 0 ; mem[end] 
+SHIFT LD R3, ASCII_SPACE_3
+    NOT R3, R3
+    ADD R3, R3, 1 ; -(' ')
+    ADD R3, R3, R2 ; check if it's a spacebar
+    BRnp ENDD
+    ; while (curr != start):
+    
+    ; mem[curr] = space
+    ; curr = end
+    ; load mem[end] again
+    BR SHIFT
+
+ENDD RET
 ASCII_SPACE_3   .fill 32
 ASCII_NEWLINE_4 .fill 10
 .end
