@@ -13,9 +13,9 @@
 ;; to debug your solutions!
 
 .orig x3000
-LD R0, START_REG
-LD R1, END_REG
-LD R2, LENGTH
+; LD R0, START_REG
+; LD R1, END_REG
+; LD R2, LENGTH
 ;; Set Stack Pointer = xF000
 LD R6, STACK_PTR
 ;; Call wordProcess(). Change the subroutine being called for your own debugging!
@@ -27,10 +27,10 @@ HALT
 STACK_PTR        .fill xF000
 ;; Change the value below to be the address you want to test! 
 ;; IMPORTANT: change it back to x7000 for the autograder to work!
-SUBROUTINE_ADDR  .fill x4000
-START_REG .fill x4000
-LENGTH .fill 5
-END_REG .fill x4015
+SUBROUTINE_ADDR  .fill x7000
+;START_REG .fill x4000
+;LENGTH .fill 5
+;END_REG .fill x4015
 ;TOS     .FILL x700D
 ;    .STRINGZ "hello"
 .end
@@ -217,9 +217,9 @@ ADD R6, R6, 1
 LDR R2, R6, 0
 ADD R6, R6, 1
 LDR R1, R6, 0
-STR R6, R6, 1
+LDR R6, R6, 1
 ADD R0, R6, 0
-STR R6, R6, 1
+LDR R6, R6, 1
 
 RET
 LOWER_A         .fill 97
@@ -263,25 +263,91 @@ ASCII_NEWLINE_2 .fill 10
 .orig x5000
 ;; YOUR CODE HERE!
 REVERSE
-    ADD R6, R6, -1 ; save R1 in stack
-    STR R1, R6, 0 
+    ADD R6, R6, -1 ; save R0 in stack
+    STR R0, R6, 0 
+    ADD R6, R6, -1
+    STR R1, R6, 0
+    ADD R6, R6, -1
+    STR R2, R6, 0
     ADD R6, R6, -1
     STR R3, R6, 0
+    ADD R6, R6, -1
+    STR R4, R6, 0
+    ADD R6, R6, -1
+    STR R5, R6, 0
     
-    LDR R3, R0, 0 ; load the first character
-    
-    
-    
-    
-    
-    LDR R3, R6, 0 ; restore R3
+    ADD R0, R0, 0 ; R0 is the starting address of the line
+    AND R1, R1, 0
+LOOOP   LDR R2, R0, 0 ; load the current character
+        BRz ENDY ; if it's null terminator
+        LD R3, ASCII_NEWLINE_3 ; check if it's a new line
+        NOT R3, R3
+        ADD R3, R3, 1 ; -(newline)
+        ADD R3, R3, R2 ; check if char == \n
+        BRz ENDY ; if so, go to while loop
+        LD R3, ASCII_SPACE_2
+        NOT R3, R3
+        ADD R3, R3, 1 ; -(space)
+        ADD R3, R3, R2 ; check if it's a space
+        BRnp INIT
+        BRz SKIPP ; if so, i++ and continue
+            SKIPP ADD R0, R0, 1 ; i++
+            BR LOOOP ; continue
+INIT    ADD R0, R0, 0 ; current address
+        AND R5, R5, 0 
+        ADD R5, R5, R0 ; start = i
+        AND R4, R4, 0 ; count = 0
+WHILE LD R3, ASCII_SPACE_2 
+        ADD R2, R2, 0 ; make sure currChar isn't \0
+        BRz ENDWHILE_2 ; if null, then go to i = start
+        NOT R3, R3
+        ADD R3, R3, 1 ; -(space)
+        ADD R3, R3, R2 
+        BRz ENDWHILE_2 ; if a space, then go to i = start
+        LD R3, ASCII_NEWLINE_3
+        NOT R3, R3
+        ADD R3, R3, 1 ; -(\n)
+        ADD R3, R3, R2 ; check if it's a new line
+        BRz ENDWHILE_2 ; 
+        ADD R6, R6, -1
+        STR R2, R6, 0 ; push currChar (R2) onto stack
+        ADD R0, R0, 1 ; i++
+        ADD R4, R4, 1 ; count++
+        BR WHILE ; go back to WHILE 
+    AND R0, R0, 0
+    ENDWHILE_2 ADD R0, R0, R4 ; i = start
+    ADD R4, R4, 0
+    WHILE_3 BRnz LOOOP ; if count <= 0 go to end
+        LDR R1, R6, 0 ; load char into R1
+        ADD R6, R6, 1
+        STR R1, R0, 0 ; store into register
+        ADD R0, R0, 1
+        ADD R4, R4, -1
+        BRp WHILE_3
+        BRnz LOOOP
+        
+ENDY LDR R5, R6, 0
     ADD R6, R6, 1
-    LDR R1, R6, 0 ; restore R1
+    LDR R4, R6, 0
     ADD R6, R6, 1
+    LDR R3, R6, 0
+    ADD R6, R6, 1
+    LDR R2, R6, 0
+    ADD R6, R6, 1
+    LDR R1, R6, 0
+    ADD R6, R6, 1
+    LDR R0, R6, 0
+    ADD R6, R6, 1
+    
+
+
+    
+    
 RET
 ASCII_NEWLINE_3 .fill 10 
 ASCII_SPACE_2   .fill 32 
 .end
+
 
 
 ;; =========================== Part 5: rightJustify ===========================
