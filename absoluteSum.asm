@@ -29,10 +29,11 @@
 .orig x3000
 ;; YOUR CODE HERE!
 
-LD R2, ARR ; counter (i) in R2 for what array index you are at
-
 AND R0, R0, 0 ; answer = 0 into R0
+LD R2, ANSWER
+STR R0, R2, 0
 
+LD R2, ARR ; counter (i) in R2 for what array index you are at
 AND R3, R3, 0 ; currNum = 0
 
 LD R1, LEN ; load length into R1
@@ -51,7 +52,8 @@ LOOP BRnz END ; while length is over 0
     ADD R1, R1, -1
     BRp LOOP
 ; loop is over, store answer in ANSWER
-END ST R0, ANSWER
+LD R2, ANSWER
+END STR R0, R2, 0
 HALT
 
 ;; Do not rename or remove any existing labels

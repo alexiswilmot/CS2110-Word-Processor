@@ -13,7 +13,7 @@
 ;; to debug your solutions!
 
 .orig x3000
-; LD R0, START_REG
+;LD R0, WORD
 ; LD R1, END_REG
 ; LD R2, LENGTH
 ;; Set Stack Pointer = xF000
@@ -31,8 +31,8 @@ SUBROUTINE_ADDR  .fill x7000
 ;START_REG .fill x4000
 ;LENGTH .fill 5
 ;END_REG .fill x4015
-;TOS     .FILL x700D
-;    .STRINGZ "hello"
+WORD     .FILL x700D
+;    .STRINGZ "hello fren 1230"
 .end
 
 
@@ -68,32 +68,31 @@ ADD R6, R6, -1
 STR R2, R6, 0
 ADD R6, R6, -1
 STR R3, R6, 0
-ADD R6, R6, -1
-STR R4, R6, 0
 
 ADD R0, R0, 0 ; addr = R0
 AND R1, R1, 0; length = 0
-START LDR R2, R0, 0 ; this is mem[addr], the current character
-    LD R3, ASCII_NEWLINE_1 ; load new line character into R3
+START LDR R2, R0, 0 ; this is mem[addr]
+    BRz DONE ; if \0 then it's done
+    LD R3, ASCII_NEWLINE_1 ; R3 = \n
     NOT R3, R3
     ADD R3, R3, 1
-    ADD R4, R2, R3 ; subtract newline from currChar to see if it == newline
-    BRz DONE ; if it's 0, they're equal and you're done
+    ADD R3, R2, R3 ; subtract newline from currChar to see if it == newline
+    BRz DONE ; if == \n, done
     LD R3, ASCII_SPACE_1 ; load space character into R3
     NOT R3, R3
     ADD R3, R3, 1
-    ADD R4, R2, R3; subtract space character from currChar to see if it == space
-    BRz DONE
+    ADD R3, R2, R3; subtract space character from currChar to see if it == space
+    BRz DONE ; if == ' ' you are done
     ADD R1, R1, 1 ; add 1 to the length
     ADD R0, R0, 1 ; add 1 to the address
     BR START ; loop again
 
 DONE AND R0, R0, 0
 ADD R0, R0, R1 ; put answer in R0
+;STR
 
-LDR R4, R6, 0 ; restore
-ADD R6, R6, 1
-LDR R3, R6, 0
+
+LDR R3, R6, 0 ; restore clobbered registers
 ADD R6, R6, 1
 LDR R2, R6, 0
 ADD R6, R6, 1
@@ -217,9 +216,10 @@ ADD R6, R6, 1
 LDR R2, R6, 0
 ADD R6, R6, 1
 LDR R1, R6, 0
-LDR R6, R6, 1
-ADD R0, R6, 0
-LDR R6, R6, 1
+ADD R6, R6, 1
+LDR R0, R6, 0
+ADD R0, R6, 1
+
 
 RET
 LOWER_A         .fill 97
@@ -385,15 +385,15 @@ ADD R0, R0, 0 ; start = R0
 AND R1, R1, 0 
 ADD R1, R1, R0 ; currAddress = start = R0
 WHILE_4 LDR R2, R1, 0 ; R2 = mem[currAddress] 
-    BRz END_WHILE_4 ; if null, exit while
+    BRz NEXT ; if null, exit while
     LD R3, ASCII_NEWLINE_4 ; R3 = \n 
     NOT R3, R3
     ADD R3, R3, 1 ; -(\n)
     ADD R4, R3, R2 ; R4 = -(\n) + currChar
-    BRz END_WHILE4
+    BRz NEXT
     ADD R1, R1, 1 ; currAddress++
 
-END_WHILE4 ADD R1, R1, -1 ; currAddress--
+NEXT ADD R1, R1, -1 ; currAddress--
 AND R5, R5, 0
 ADD R5, R5, R1 ; R5 = end = curr
 ; shift over entire string one spacebar at a time
@@ -404,12 +404,24 @@ SHIFT LD R3, ASCII_SPACE_3
     ADD R3, R3, 1 ; -(' ')
     ADD R3, R3, R2 ; check if it's a spacebar
     BRnp ENDD
-    ; while (curr != start):
+    ; while (curr != start): 
+    INNER NOT R1, R1
+        ADD R1, R1, 1 ; -curr
+        ADD R3, R1, R0 ; if curr == start, exit innerWhile
+        BRz SPACE_BAR
+        NOT R1, R1 ; curr - 1
+        LDR R3, R1, 0 ; mem[curr - 1]
+        ADD R1, R1, 1 ; get curr back to normal
+        STR R3, R1, 0; mem[curr] = mem[curr - 1]
+        ADD R1, R1, -1 ; curr--
+        BR INNER
     
-    ; mem[curr] = space
-    ; curr = end
-    ; load mem[end] again
-    BR SHIFT
+    SPACE_BAR LD R3, ASCII_SPACE_3 
+        STR R3, R1, 0 ; mem[curr] = space
+        AND R1, R1, 0 
+        ADD R1, R1, R5 ; curr = end
+    LDR R2, R5, 0 ; load mem[end] again
+    BRnp SHIFT
 
 ENDD RET
 ASCII_SPACE_3   .fill 32
@@ -443,6 +455,11 @@ ASCII_NEWLINE_4 .fill 10
 
 .orig x6000
 ;; YOUR CODE HERE!
+WHILE_TRUE
+GETC
+
+
+
 RET
 ASCII_DOLLAR_SIGN .fill 36
 .end
