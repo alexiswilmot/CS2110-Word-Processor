@@ -218,7 +218,7 @@ ADD R6, R6, 1
 LDR R1, R6, 0
 ADD R6, R6, 1
 LDR R0, R6, 0
-ADD R0, R6, 1
+ADD R6, R6, 1
 
 
 RET
@@ -276,7 +276,7 @@ REVERSE
     ADD R6, R6, -1
     STR R5, R6, 0
     
-    ADD R0, R0, 0 ; R0 is the starting address of the line
+    ADD R0, R0, 0 ; i = R0, starting address
     AND R1, R1, 0
 LOOOP   LDR R2, R0, 0 ; load the current character
         BRz ENDY ; if it's null terminator
@@ -389,16 +389,18 @@ WHILE_4 LDR R2, R1, 0 ; R2 = mem[currAddress]
     LD R3, ASCII_NEWLINE_4 ; R3 = \n 
     NOT R3, R3
     ADD R3, R3, 1 ; -(\n)
-    ADD R4, R3, R2 ; R4 = -(\n) + currChar
+    ADD R3, R3, R2 ; R3 = -(\n) + currChar
     BRz NEXT
     ADD R1, R1, 1 ; currAddress++
+    BR WHILE_4
 
 NEXT ADD R1, R1, -1 ; currAddress--
-AND R5, R5, 0
-ADD R5, R5, R1 ; R5 = end = curr
+AND R4, R4, 0
+ADD R4, R4, R1 ; R4 = end = curr
+
 ; shift over entire string one spacebar at a time
 ; until no longer terminated by a spacebar
-    LDR R2, R5, 0 ; mem[end] 
+    LDR R2, R4, 0 ; mem[end] 
 SHIFT LD R3, ASCII_SPACE_3
     NOT R3, R3
     ADD R3, R3, 1 ; -(' ')
@@ -419,8 +421,8 @@ SHIFT LD R3, ASCII_SPACE_3
     SPACE_BAR LD R3, ASCII_SPACE_3 
         STR R3, R1, 0 ; mem[curr] = space
         AND R1, R1, 0 
-        ADD R1, R1, R5 ; curr = end
-    LDR R2, R5, 0 ; load mem[end] again
+        ADD R1, R1, R4 ; curr = end
+    LDR R2, R4, 0 ; load mem[end] again
     BRnp SHIFT
 
 ENDD RET
@@ -455,11 +457,34 @@ ASCII_NEWLINE_4 .fill 10
 
 .orig x6000
 ;; YOUR CODE HERE!
+ADD R0, R0, 0 ; bufferPointer
+AND R1, R1, 0
+ADD R1, R0, R1 ; move bufferPointer to R1
 WHILE_TRUE
 GETC
+OUT
+STR R0, R1, 0
+LD R2, ASCII_DOLLAR_SIGN
+NOT R2, R2
+ADD R2, R2, 1 ; -($)
+ADD R2, R2, R0
+BRnp BUFF ; if not $, then BR to buffPoint++
+AND R3, R3, 0
+ADD R3, R3, R1
+ADD R3, R3, -1 ; R3 = bufferPointer - 1
+LDR R0, R3, 0 ; mem[bufferPointer - 1]
+LD R2, ASCII_DOLLAR_SIGN
+NOT R2, R2
+ADD R2, R2, 1 ; -($)
+ADD R2, R2, R0
+BRnp BUFF ; if not $, buff++
+AND R0, R0, 0
+STR R0, R3, 0
+BR BREAK
+BUFF ADD R1, R1, 1
+BR WHILE_TRUE
 
-
-
+BREAK
 RET
 ASCII_DOLLAR_SIGN .fill 36
 .end
