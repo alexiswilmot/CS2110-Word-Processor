@@ -13,7 +13,7 @@
 ;; to debug your solutions!
 
 .orig x3000
-;LD R0, WORD
+;LEA R0, RIGHTY
 ; LD R1, END_REG
 ; LD R2, LENGTH
 ;; Set Stack Pointer = xF000
@@ -31,8 +31,9 @@ SUBROUTINE_ADDR  .fill x7000
 ;START_REG .fill x4000
 ;LENGTH .fill 5
 ;END_REG .fill x4015
-WORD     .FILL x700D
-;    .STRINGZ "hello fren 1230"
+;WORD     .FILL x700D
+;RIGHTY    .STRINGZ "testing 1 2 3       "
+; FILLER .fill x6500
 .end
 
 
@@ -278,14 +279,14 @@ REVERSE
     
     ADD R0, R0, 0 ; i = R0, starting address
     AND R1, R1, 0
-LOOOP   LDR R2, R0, 0 ; load the current character
+LOOOP   LDR R2, R0, 0 ; mem[i] = currChar
         BRz ENDY ; if it's null terminator
         
         LD R3, ASCII_NEWLINE_3 ; check if it's a new line
         NOT R3, R3
         ADD R3, R3, 1 ; -(newline)
         ADD R3, R3, R2 ; check if char == \n
-        BRz ENDY ; if so, go to while loop
+        BRz ENDY ; if so, go to end
         
         LD R3, ASCII_SPACE_2
         NOT R3, R3
@@ -318,8 +319,8 @@ WHILE LD R3, ASCII_SPACE_2
         ADD R0, R0, 1 ; i++
         ADD R4, R4, 1 ; count++
         BR WHILE ; go back to WHILE 
-    AND R0, R0, 0
-    ENDWHILE_2 ADD R0, R0, R4 ; i = start
+    ENDWHILE_2 AND R0, R0, 0 
+    ADD R0, R0, R5 ; i = start
     ADD R4, R4, 0
     WHILE_3 BRnz LOOOP ; if count <= 0 go to end
         LDR R1, R6, 0 ; load char into R1
@@ -341,7 +342,7 @@ ENDY LDR R5, R6, 0
     LDR R1, R6, 0
     ADD R6, R6, 1
     LDR R0, R6, 0
-    ADD R6, R6, 1
+    ADD R6, R7, 1
     
 
 
@@ -419,6 +420,8 @@ SHIFT LD R3, ASCII_SPACE_3
         BR INNER
     
     SPACE_BAR LD R3, ASCII_SPACE_3 
+        NOT R1, R1
+        ADD R1, R1, 1 ; get R1 back to normal
         STR R3, R1, 0 ; mem[curr] = space
         AND R1, R1, 0 
         ADD R1, R1, R4 ; curr = end
@@ -429,8 +432,6 @@ ENDD RET
 ASCII_SPACE_3   .fill 32
 ASCII_NEWLINE_4 .fill 10
 .end
-
-
 ;; ============================= Part 6: getInput =============================
 ;; DESCRIPTION: 
 ;; This function should read a string of characters from the keyboard and place
@@ -456,6 +457,22 @@ ASCII_NEWLINE_4 .fill 10
 ;;          bufferPointer += 1
 
 .orig x6000
+;; YOUR CODE HERE!
+STR R7, R6, 0
+ADD R6, R6, -1
+STR R5, R6, 0
+ADD R6, R6, -1
+STR R4, R6, 0
+ADD R6, R6, -1
+STR R3, R6, 0
+ADD R6, R6, -1
+STR R2, R6, 0
+ADD R6, R6, -1
+STR R1, R6, 0
+ADD R6, R6, -1
+STR R0, R6, 0
+ADD R6, R6, -1
+
 ;; YOUR CODE HERE!
 ADD R0, R0, 0 ; bufferPointer
 AND R1, R1, 0
@@ -484,7 +501,23 @@ BR BREAK
 BUFF ADD R1, R1, 1
 BR WHILE_TRUE
 
+
 BREAK
+LDR, R0, R6, 0
+ADD R6, R6, 1
+LDR R1, R6, 0
+ADD R6, R6, 1
+LDR R2, R6, 0
+ADD R6, R6, 1
+LDR R3, R6, 0
+ADD R6, R6, 1
+LDR R4, R6, 0
+ADD R6, R6, 1
+LDR R5, R6, 0
+ADD R6, R6, 1
+LDR R7, R6, 0
+ADD R6, R6, 1
+
 RET
 ASCII_DOLLAR_SIGN .fill 36
 .end
@@ -764,6 +797,109 @@ ASCII_NEWLINE_5 .fill 10
 ;;      return
 .orig x7000
 ;; YOUR CODE HERE!
+ADD R6, R6, -1
+STR R7, R6, 0
+    ADD R6, R6, -1 ; save clobbered
+    STR R0, R6, 0
+    ADD R6, R6, -1
+    STR R1, R6, 0
+    ADD R6, R6, -1
+    STR R2, R6, 0
+    ADD R6, R6, -1
+    STR R3, R6, 0
+    ADD R6, R6, -1
+    STR R4, R6, 0
+    ADD R6, R6, -1
+    STR R5, R6, 0
+
+
+LD R0, BUFFER_1
+LD R1, GETINPUT_ADDR
+JSRR R1 ; getInput
+OUT
+LD R0, BUFFER_1 ; address of unparsed string
+LD R1, BUFFER_2 ; address of parsed string
+LD R3, PARSELINES_ADDR
+JSRR R3
+LD R4, BUFFER_2 ; startOfCurrentLine
+LD R0, OPTIONS_MSG
+PUTS
+WHILE_TRU
+    GETC ;  R0 = GETC = option
+    LD R5, ASCII_ZERO
+    NOT R5, R5
+    ADD R5, R5, 1 ; -ZERO
+    ADD R5, R5, R0 ; INPUT - ZERO
+        BRz PART_2 ; if 0, pass
+    LD R5, ASCII_ONE ; check if 1
+    NOT R5, R5
+    ADD R5, R5, 1 ; -1
+    ADD R5, R5, R0 ; INPUT - ONE
+    BRnp CHECK2
+        AND R0, R0, 0 ; if INPUT == 1
+        ADD R0, R0, R4 ; startOfCurrentLine
+        LD R1, CAPITALIZE_ADDR
+        JSRR R1 ; capitalize line, option 1
+        BR PART_2
+    CHECK2 LD R5, ASCII_TWO
+        NOT R5, R5
+        ADD R5, R5, 1 ; -TWO
+        ADD R5, R5, R0 ; INPUT - TWO
+    BRnp CHECK3 ; if not two, check if 3
+        AND R0, R0, 0 ; if input == two , reverse words
+        ADD R0, R0, R4 
+        LD R1, REVERSE_ADDR 
+        JSRR R1 ; reverseWords, option 2
+        BR PART_2
+    CHECK3 LD R5, ASCII_THREE
+        NOT R5, R5
+        ADD R5, R5, 1 ; -THREE
+        ADD R5, R5, R0 ; INPUT - THREE
+    BRnp PART_2
+        AND R0, R0, 0 ; if INPUT == THREE
+        ADD R0, R0, R4 ; startOfCurrentLine
+        LD R1, RIGHT_JUSTIFY_ADDR
+        JSRR R1 ; right justify
+        BR PART_2
+    CONT BR WHILE_TRU ; continue to next iteration
+    
+    PART_2 AND R5, R5, 0 ; i = 0
+    ; figure out if i < 9
+    WHILE_I9 AND R1, R1, 0
+        ADD R1, R1, 9 ; R1 = 9
+        NOT, R1, R1
+        ADD R1, R1, 1 ; -9
+        ADD R1, R1, R5 ; i - 9
+        BRzp IF_ENDER ; if i > 9, exit while loop
+        LDR R2, R4, 0 ; mem[startOfCurrentLine]
+        AND R0, R0, 0 ; move to R0 for OUT
+        ADD R0, R0, R2
+        OUT
+        ADD R4, R4, 1 ; startOfCurrentLine++
+        ADD R5, R5, 1 ; i++
+        BR WHILE_I9
+        
+    IF_ENDER ADD R4, R4, -1 ; startOfCurrLine - 1
+        LDR R2, R4, 0 ; mem[startOfCurrLine - 1]
+        BRz ENDINGG
+        ADD R4, R4, 1 ; get startOfCurrLine back
+        BR WHILE_TRU ; continue to next iteration
+        
+
+ENDINGG LDR R5, R6, 0
+        ADD R6, R6, 1
+        LDR R4, R6, 0
+        ADD R6, R6, 1
+        LDR R3, R6, 0
+        ADD R6, R6, 1
+        LDR R2, R6, 0
+        ADD R6, R6, 1
+        LDR R1, R6, 0
+        ADD R6, R6, 1
+        LDR R0, R6, 0
+        ADD R6, R6, 1
+        LDR R7, R6, 0
+        ADD R6, R6, 1
 RET
 BUFFER_1           .fill x8000
 BUFFER_2           .fill x8500
