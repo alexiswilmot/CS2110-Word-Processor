@@ -92,7 +92,8 @@ DONE AND R0, R0, 0
 ADD R0, R0, R1 ; put answer in R0
 ;STR
 
-
+;LDR R0, R6, 0
+;ADD R6, R6, 1
 LDR R3, R6, 0 ; restore clobbered registers
 ADD R6, R6, 1
 LDR R2, R6, 0
@@ -264,8 +265,7 @@ ASCII_NEWLINE_2 .fill 10
 .orig x5000
 ;; YOUR CODE HERE!
 REVERSE
-    ADD R6, R6, -1 ; set stack pointer to -1
-    STR R0, R6, 0  ; push starting address (R0) onto stack
+
     ADD R6, R6, -1
     STR R1, R6, 0
     ADD R6, R6, -1
@@ -276,6 +276,9 @@ REVERSE
     STR R4, R6, 0
     ADD R6, R6, -1
     STR R5, R6, 0
+    
+    ADD R6, R6, -1 ; set stack pointer to -1
+    STR R0, R6, 0  ; push starting address (R0) onto stack
     
     ADD R0, R0, 0 ; i = R0, starting address
     AND R1, R1, 0
@@ -293,8 +296,7 @@ LOOOP   LDR R2, R0, 0 ; mem[i] = currChar
         ADD R3, R3, 1 ; -(space)
         ADD R3, R3, R2 ; check if it's a space
         BRnp INIT
-        BRz SKIPP ; if so, i++ and continue
-            SKIPP ADD R0, R0, 1 ; i++
+            ADD R0, R0, 1 ; if == ' ', i++
             BR LOOOP ; continue
             
 INIT    ADD R0, R0, 0 ; current address
@@ -302,7 +304,8 @@ INIT    ADD R0, R0, 0 ; current address
         ADD R5, R5, R0 ; start = i
         AND R4, R4, 0 ; count = 0
         
-WHILE LD R3, ASCII_SPACE_2 
+WHILE   LDR R2, R0, 0 ; get currChar
+        LD R3, ASCII_SPACE_2 
         ADD R2, R2, 0 ; make sure currChar isn't \0
         BRz ENDWHILE_2 ; if null, then go to i = start
         NOT R3, R3
@@ -314,7 +317,7 @@ WHILE LD R3, ASCII_SPACE_2
         ADD R3, R3, 1 ; -(\n)
         ADD R3, R3, R2 ; check if it's a new line
         BRz ENDWHILE_2 ; 
-        ADD R6, R6, -1
+        ADD R6, R6, -1 ; push, R6 - 1 to change address to store in
         STR R2, R6, 0 ; push currChar (R2) onto stack
         ADD R0, R0, 1 ; i++
         ADD R4, R4, 1 ; count++
@@ -323,15 +326,17 @@ WHILE LD R3, ASCII_SPACE_2
     ADD R0, R0, R5 ; i = start
     ADD R4, R4, 0
     WHILE_3 BRnz LOOOP ; if count <= 0 go to end
-        LDR R1, R6, 0 ; load char into R1
-        ADD R6, R6, 1
+        LDR R1, R6, 0 ; load char into R1 from stack
+        ADD R6, R6, 1 ; increment stack
         STR R1, R0, 0 ; store into register
-        ADD R0, R0, 1
-        ADD R4, R4, -1
+        ADD R0, R0, 1 ; i++
+        ADD R4, R4, -1 ; count --
         BRp WHILE_3
-        BRnz LOOOP
+        BR LOOOP
         
-ENDY LDR R5, R6, 0
+ENDY LDR R0, R6, 0
+    ADD R6, R6, 1
+    LDR R5, R6, 0
     ADD R6, R6, 1
     LDR R4, R6, 0
     ADD R6, R6, 1
@@ -342,11 +347,7 @@ ENDY LDR R5, R6, 0
     LDR R1, R6, 0
     ADD R6, R6, 1
     LDR R0, R6, 0
-    ADD R6, R7, 1
-    
-
-
-    
+    ADD R6, R6, 1
     
 RET
 ASCII_NEWLINE_3 .fill 10 
@@ -382,6 +383,18 @@ ASCII_SPACE_2   .fill 32
 
 .orig x5800
 ;; YOUR CODE HERE!
+ADD R6, R6, -1 ; save clobbered registers
+STR R0, R6, 0
+ADD R6, R6, -1
+STR R1, R6, 0
+ADD R6, R6, -1
+STR R2, R6, 0
+ADD R6, R6, -1
+STR R3, R6, 0
+ADD R6, R6, -1
+STR R4, R6, 0
+
+
 ADD R0, R0, 0 ; start = R0
 AND R1, R1, 0 
 ADD R1, R1, R0 ; currAddress = start = R0
@@ -428,7 +441,17 @@ SHIFT LD R3, ASCII_SPACE_3
     LDR R2, R4, 0 ; load mem[end] again
     BRnp SHIFT
 
-ENDD RET
+ENDD LDR R4, R6, 0
+    ADD R6, R6, 1
+    LDR R3, R6, 0
+    ADD R6, R6, 1
+    LDR R2, R6, 0
+    ADD R6, R6, 1
+    LDR R1, R6, 0
+    ADD R6, R6, 1
+    LDR R1, R0, 0
+    ADD R6, R6, 1
+RET
 ASCII_SPACE_3   .fill 32
 ASCII_NEWLINE_4 .fill 10
 .end
@@ -458,7 +481,6 @@ ASCII_NEWLINE_4 .fill 10
 
 .orig x6000
 ;; YOUR CODE HERE!
-STR R7, R6, 0
 ADD R6, R6, -1
 STR R5, R6, 0
 ADD R6, R6, -1
@@ -471,15 +493,14 @@ ADD R6, R6, -1
 STR R1, R6, 0
 ADD R6, R6, -1
 STR R0, R6, 0
-ADD R6, R6, -1
 
 ;; YOUR CODE HERE!
 ADD R0, R0, 0 ; bufferPointer
 AND R1, R1, 0
 ADD R1, R0, R1 ; move bufferPointer to R1
 WHILE_TRUE
-GETC
-OUT
+GETC ; get input and put in R0
+OUT ; print out R0
 STR R0, R1, 0
 LD R2, ASCII_DOLLAR_SIGN
 NOT R2, R2
@@ -514,8 +535,6 @@ ADD R6, R6, 1
 LDR R4, R6, 0
 ADD R6, R6, 1
 LDR R5, R6, 0
-ADD R6, R6, 1
-LDR R7, R6, 0
 ADD R6, R6, 1
 
 RET
@@ -822,7 +841,7 @@ LD R1, BUFFER_2 ; address of parsed string
 LD R3, PARSELINES_ADDR
 JSRR R3
 LD R4, BUFFER_2 ; startOfCurrentLine
-LD R0, OPTIONS_MSG
+LEA R0, OPTIONS_MSG
 PUTS
 WHILE_TRU
     GETC ;  R0 = GETC = option
@@ -867,7 +886,7 @@ WHILE_TRU
     ; figure out if i < 9
     WHILE_I9 AND R1, R1, 0
         ADD R1, R1, 9 ; R1 = 9
-        NOT, R1, R1
+        NOT R1, R1
         ADD R1, R1, 1 ; -9
         ADD R1, R1, R5 ; i - 9
         BRzp IF_ENDER ; if i > 9, exit while loop
