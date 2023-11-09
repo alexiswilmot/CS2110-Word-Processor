@@ -264,8 +264,6 @@ ASCII_NEWLINE_2 .fill 10
 
 .orig x5000
 ;; YOUR CODE HERE!
-REVERSE
-
     ADD R6, R6, -1
     STR R1, R6, 0
     ADD R6, R6, -1
@@ -346,9 +344,7 @@ ENDY LDR R0, R6, 0
     ADD R6, R6, 1
     LDR R1, R6, 0
     ADD R6, R6, 1
-    LDR R0, R6, 0
-    ADD R6, R6, 1
-    
+
 RET
 ASCII_NEWLINE_3 .fill 10 
 ASCII_SPACE_2   .fill 32 
@@ -449,7 +445,7 @@ ENDD LDR R4, R6, 0
     ADD R6, R6, 1
     LDR R1, R6, 0
     ADD R6, R6, 1
-    LDR R1, R0, 0
+    LDR R0, R6, 0
     ADD R6, R6, 1
 RET
 ASCII_SPACE_3   .fill 32
@@ -499,8 +495,8 @@ ADD R0, R0, 0 ; bufferPointer
 AND R1, R1, 0
 ADD R1, R0, R1 ; move bufferPointer to R1
 WHILE_TRUE
-GETC ; get input and put in R0
-OUT ; print out R0
+GETC
+OUT
 STR R0, R1, 0
 LD R2, ASCII_DOLLAR_SIGN
 NOT R2, R2
